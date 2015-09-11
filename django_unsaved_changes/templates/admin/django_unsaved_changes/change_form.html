@@ -16,8 +16,9 @@
   <script type="text/javascript" src="{% static 'unsaved_changes/js/unsaved_changes.jqueryplugin.js' %}"></script>
 
   <script>
-    $( document ).ready(function() {
-      $(document).unsavedChanges(
+    $unsaved_changes_jquery = jQuery.noConflict();
+    $unsaved_changes_jquery( document ).ready(function() {
+      $unsaved_changes_jquery(document).unsavedChanges(
         {
           'use_persistant_storage':{{UNSAVED_CHANGES_USE_PERSISTANT_STORAGE|lower}},
           'use_alert':{{UNSAVED_CHANGES_USE_ALERT|lower}},

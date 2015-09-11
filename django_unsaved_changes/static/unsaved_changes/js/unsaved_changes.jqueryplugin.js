@@ -2,6 +2,7 @@
  * nina@ninalp.com
  */
 
+$unsaved_changes_jquery = jQuery.noConflict();
 ;(function ( $, window, document, undefined ) {
 
 
@@ -269,7 +270,6 @@
                     //continue
 
                 }else{
-                    // console.log($(item).attr("type")+" "+item.name+" = "+value+" "+item.checked);
                 
                     if (output[item.name] !== undefined) {
                         if (!output[item.name].push) {
@@ -330,9 +330,9 @@
                     if(element != '' && element in y){
                         
                         var same = parent.areObjectsEqual(x[element], y[element], allow_different_keys);     
-                        // if(same==false){
-                        //     console.log(element+" values are unequal: "+x[element]+" != "+y[element])
-                        // }
+                        if(same==false){
+                            console.log(element+" values are unequal: "+x[element]+" != "+y[element])
+                        }
                         return same;
                     }else{
                         return true;
@@ -355,7 +355,7 @@
         });
     };
 
-})( jQuery, window, document );
+})( $unsaved_changes_jquery, window, document );
 
 //$( document ).ready(function() {
 //  $(".selector").pluginName();
