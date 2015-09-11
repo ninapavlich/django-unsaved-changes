@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+
+
+<!-- MESSAGES -->
+{% block messages %}
+    
+  <ul class="grp-messagelist">
+    
+      {% if messages %}
+      <!-- NOTE: no message|capfirst by purpose, because it does not work in some languages -->
+      {% for message in messages %}
+          <li{% if message.tags %} class="grp-{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+      {% endif %}
+  </ul>
+    
+{% endblock %}
