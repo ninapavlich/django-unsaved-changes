@@ -1,4 +1,22 @@
 {% extends "admin/change_form.html" %}
+{% load admin_static %}{% load i18n grp_tags %}
+
+<!-- STYLESHEETS -->
+{% block stylesheets %}
+    {{ block.super }}
+
+    <link href="{% static "unsaved_changes/css/unsaved_changes.css" %}" rel="stylesheet" type="text/css" media="screen" />
+{% endblock %}
+
+<!-- JAVASCRIPTS -->
+{% block javascripts %}
+  {{block.super}}
+  <script type="text/javascript" src="{% static 'unsaved_changes/js/vendor/jquery.js' %}"></script>
+  <script type="text/javascript" src="{% static 'unsaved_changes/js/vendor/garlic.js' %}"></script>
+  <script type="text/javascript" src="{% static 'unsaved_changes/js/unsaved_changes.js' %}"></script>
+
+{% endblock %}
+
 
 
 <!-- MESSAGES -->

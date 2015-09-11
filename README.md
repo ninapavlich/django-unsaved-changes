@@ -22,17 +22,23 @@ TODO
       ...
     )
 
-##views.py
-
-TODO
-
-##urls.py
-
-TODO
-
 ##admin.py
   
-TODO
+Either extend the example admin:
+
+	from django_unsaved_changes.admin import UnsavedChangesAdmin
+
+
+	class MyModelAdmin(UnsavedChangesAdmin):
+
+		pass
+
+Or simply add the necessary template to your existing admin:
+	
+	class MyModelAdmin(UnsavedChangesAdmin):
+
+		change_form_template = "admin/django_unsaved_changes/change_form.html"
+
  
 #Screenshots
 

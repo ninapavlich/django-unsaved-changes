@@ -1,1 +1,5 @@
-console.log("HELLO unsaved changes here!")
+$( document ).ready(function() {
+    // $( 'input' ).garlic();
+  $( 'form' ).garlic();
+});
+

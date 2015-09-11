@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name = 'django_unsaved_changes',
     packages = ['django_unsaved_changes'],
-    version = '0.0',
+    version = '0.1',
     description = 'UX improvements for admin',
     author = 'Nina Pavlich',
     author_email='nina@ninalp.com',

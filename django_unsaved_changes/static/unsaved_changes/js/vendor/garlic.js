@@ -93,7 +93,7 @@
       if ( this.options.destroy ) {
         $( this.parentForm ).on( 'submit reset' , false, $.proxy( this.destroy, this ) );
       }
-
+      console.log("init ")
       // retrieve garlic persisted data
       this.retrieve();
     }
