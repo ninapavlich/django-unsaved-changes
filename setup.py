@@ -8,7 +8,7 @@ setup(
     author = 'Nina Pavlich',
     author_email='nina@ninalp.com',
     url = 'https://github.com/ninapavlich/django-unsaved-changes',
-    keywords = ['libraries', 'web development'],
+    keywords = ['libraries', 'web development', 'cms', 'django', 'django-grappelli'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
