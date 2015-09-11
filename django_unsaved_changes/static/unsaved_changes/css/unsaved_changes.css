@@ -1,0 +1,165 @@
+@-webkit-keyframes move {
+  0% {
+     background-position: 0 0;
+  }
+  100% {
+     background-position: 50px 50px;
+  }
+}
+
+@-moz-keyframes move {
+  0% {
+     background-position: 0 0;
+  }
+  100% {
+     background-position: 50px 50px;
+  }
+}
+
+.progress{
+  height: 20px;
+  position: relative;
+  background: #555;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  padding: 3px;
+  -webkit-box-shadow: inset 0 -1px 1px rgba(255,255,255,0.3);
+  -moz-box-shadow: inset 0 -1px 1px rgba(255,255,255,0.3);
+  box-shadow: inset 0 -1px 1px rgba(255,255,255,0.3);
+}
+.progress .indicator{
+  display: block;
+  height: 100%;
+  -webkit-border-top-right-radius: 3px;
+  -webkit-border-bottom-right-radius: 3px;
+  -moz-border-radius-topright: 3px;
+  -moz-border-radius-bottomright: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  -webkit-border-top-left-radius: 3px;
+  -webkit-border-bottom-left-radius: 3px;
+  -moz-border-radius-topleft: 3px;
+  -moz-border-radius-bottomleft: 3px;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  background-color: #309bbf;
+  
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #4fb2d3), color-stop(100%, #309bbf));
+  background-image: -webkit-linear-gradient(#4fb2d3,#309bbf);
+  background-image: -moz-linear-gradient(#4fb2d3,#309bbf);
+  background-image: -o-linear-gradient(#4fb2d3,#309bbf);
+  background-image: -ms-linear-gradient(#4fb2d3,#309bbf);
+  background-image: linear-gradient(#4fb2d3,#309bbf);
+
+  -webkit-box-shadow: inset 0 2px 9px rgba(255,255,255,0.3), inset 0 -2px 6px rgba(0,0,0,0.4);
+  -moz-box-shadow: inset 0 2px 9px rgba(255,255,255,0.3), inset 0 -2px 6px rgba(0,0,0,0.4);
+  box-shadow: inset 0 2px 9px rgba(255,255,255,0.3), inset 0 -2px 6px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress .indicator:after{
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-image: -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.25, rgba(255, 255, 255, .2)), color-stop(.25, transparent), color-stop(.5, transparent), color-stop(.5, rgba(255, 255, 255, .2)), color-stop(.75, rgba(255, 255, 255, .2)), color-stop(.75, transparent), to(transparent) );
+  background-image: -moz-linear-gradient( -45deg, rgba(255, 255, 255, .2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .2) 75%, transparent 75%, transparent );
+  z-index: 1;
+  -webkit-background-size: 50px 50px;
+  -moz-background-size: 50px 50px;
+  background-size: 50px 50px;
+  -webkit-animation: move 2s linear infinite;
+  -moz-animation: move 2s linear infinite;
+  -webkit-border-top-right-radius: 3px;
+  -webkit-border-bottom-right-radius: 3px;
+  -moz-border-radius-topright: 3px;
+  -moz-border-radius-bottomright: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  -webkit-border-top-left-radius: 3px;
+  -webkit-border-bottom-left-radius: 3px;
+  -moz-border-radius-topleft: 3px;
+  -moz-border-radius-bottomleft: 3px;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  overflow: hidden;  
+}
+.progress.done .indicator:after,
+.progress.error .indicator:after{
+  -webkit-animation: none;
+  -moz-animation: none;
+}
+.progress.done .indicator:after{
+  display: none;
+}
+.progress.done .indicator{
+  background:#bf3030;
+}
+.progress.error .indicator{
+  background:#bf3030;
+}
+
+.grp-messagelist li.dynamic .grp-tools{
+  top:-8px;
+}
+.grp-messagelist li.dynamic .grp-tools li{
+  border:0;
+  background-color: transparent;
+}
+
+.has_persistant_data {
+    border: 1px dotted #4fb2d3 !important;
+}
+.has_unsaved_data {
+    border: 1px dotted #333 !important;
+}
+
+.grp-autocomplete-wrapper-m2m.has_persistant_data .has_persistant_data,
+.grp-autocomplete-wrapper-m2m.has_unsaved_data .has_unsaved_data {
+  border: 0 !important;
+}
+.persistant-data-field-tools a{
+  font-size: 10px;
+  white-space: normal;
+}
+
+
+
+.submitted-overlay-container{
+  position:fixed;
+  top:0px;
+  left:0px;
+  width:100%;
+  height:100%;
+  text-align: center;
+  z-index:901;
+}
+.submitted-overlay-screen{
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.7);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.submitted-overlay{
+  width:300px;
+  margin:auto;
+  top: 40%;
+  position: relative;
+  padding: 2em;
+
+  border: 1px solid #ccc;
+  background: #eee;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+}
+.submitted-overlay h2{
+  font-size: 22px;
+  margin-bottom: 1em;
+}
