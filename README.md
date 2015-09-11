@@ -2,18 +2,22 @@
 
 #Features
 
-1. (Optional) Restore changed field values if window is accidentally closed. 
-	This feature uses garlic.js
-
-2. (Optional) Alert admin when they are about to close a window that has 
+1. (Optional) Alert admin when they are about to close a window that has 
 	unsaved changes.
+![Unload Notification](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/unload_notification.png)
 
-3. (Optional) Display an overlay indicating that the form has been submitted 
+2. (Optional) Display an overlay indicating that the form has been submitted 
 	and is processing. This feature is in response to many admins that I've 
 	worked with that were unsure that the form was being submitted and so 
 	submitted it multiple times.
+![Saving Overlay](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/saving_overlay.png)
 
-You can use any combination of these three features using the settings below.
+3. (Optional) Restore changed field values if window is accidentally closed. 
+	This feature uses garlic.js
+![Garlic Notification](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/garlic_notification.png)
+
+You can use any combination of these three features using the settings below, 
+though at this point I don't recommend using the third feature in production.
 
 
 #Compatibility / Requirements
@@ -34,9 +38,9 @@ You can use any combination of these three features using the settings below.
       ...
     )
 
-	UNSAVED_CHANGES_USE_PERSISTANT_STORAGE = True
 	UNSAVED_CHANGES_USE_ALERT = True
 	UNSAVED_CHANGES_USE_SUBMITTED_OVERLAY = True
+	UNSAVED_CHANGES_USE_PERSISTANT_STORAGE = False #not quite production ready
 
 ##admin.py
   
@@ -66,6 +70,6 @@ Or simply add the necessary template and context variables to your existing admi
 	        extra_context['UNSAVED_CHANGES_USE_SUBMITTED_OVERLAY'] = True
 	        return super(MyModelAdmin, self).change_view(request, object_id, form_url, extra_context)
 
-#Screenshots
+#Known Issues
 
-TODO
+	* Garlic persistant data detection not quite working with Grappelli M2M/FK widgets, Grappelli Horizontal widget, CKEditor widget, Imagekit Cropper

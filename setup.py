@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = 'django_unsaved_changes',
+    name = 'django-unsaved-changes',
     packages = ['django_unsaved_changes'],
     version = '0.1',
     description = 'UX improvements for admin',
