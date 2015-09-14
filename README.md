@@ -38,9 +38,12 @@ though at this point I don't recommend using the third feature in production.
       ...
     )
 
-	UNSAVED_CHANGES_USE_ALERT = True
-	UNSAVED_CHANGES_USE_SUBMITTED_OVERLAY = True
-	UNSAVED_CHANGES_USE_PERSISTANT_STORAGE = False #not quite production ready
+	UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT = True
+	UNSAVED_CHANGES_SUMBITTED_ALERT = True
+	UNSAVED_CHANGES_SUBMITTED_OVERLAY = True
+	UNSAVED_CHANGES_PERSISTANT_STORAGE = False #not quite production ready
+
+	#Note that all four of these settins are False by default
 
 ##admin.py
   
@@ -52,9 +55,10 @@ Either extend the example admin:
 	class MyModelAdmin(UnsavedChangesAdmin):
 
 		#Note: You may override settings on an individual admin view:
-		# UNSAVED_CHANGES_USE_PERSISTANT_STORAGE = False
-		# UNSAVED_CHANGES_USE_ALERT = False
-		# UNSAVED_CHANGES_USE_SUBMITTED_OVERLAY = False
+		# UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT = False
+		# UNSAVED_CHANGES_SUMBITTED_ALERT = False
+		# UNSAVED_CHANGES_SUBMITTED_OVERLAY = False
+		# UNSAVED_CHANGES_PERSISTANT_STORAGE = False
 
 Or simply add the necessary template and context variables to your existing admin view:
 	
@@ -65,11 +69,12 @@ Or simply add the necessary template and context variables to your existing admi
  		def change_view(self, request, object_id, form_url='', extra_context=None):
         
 	        extra_context = extra_context or {}
-	        extra_context['UNSAVED_CHANGES_USE_PERSISTANT_STORAGE'] = True
-	        extra_context['UNSAVED_CHANGES_USE_ALERT'] = True
-	        extra_context['UNSAVED_CHANGES_USE_SUBMITTED_OVERLAY'] = True
+	        extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT'] = True
+	        extra_context['UNSAVED_CHANGES_SUMBITTED_ALERT'] = True
+	        extra_context['UNSAVED_CHANGES_SUBMITTED_OVERLAY'] = True
+	        extra_context['UNSAVED_CHANGES_PERSISTANT_STORAGE'] = False
 	        return super(MyModelAdmin, self).change_view(request, object_id, form_url, extra_context)
 
 #Known Issues
 
-	* Garlic persistant data detection not quite working with Grappelli M2M/FK widgets, Grappelli Horizontal widget, CKEditor widget, Imagekit Cropper
+	* Garlic persistant data detection not quite working with Grappelli Horizontal widget, WYSIWYG widgets, File uploads
