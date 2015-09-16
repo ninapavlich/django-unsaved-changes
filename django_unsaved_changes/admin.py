@@ -28,6 +28,8 @@ class UnsavedChangesAdmin(admin.ModelAdmin):
         except:
             extra_context['UNSAVED_CHANGES_PERSISTANT_STORAGE'] = False
 
+        extra_context['DEBUG'] = settings.DEBUG
+
         return extra_context
 
     def change_view(self, request, object_id, form_url='', extra_context=None):

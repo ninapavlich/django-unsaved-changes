@@ -25,6 +25,7 @@ though at this point I don't recommend using the third feature in production.
 1. Django (last tested with 1.8.2)
 2. django-grappelli (last tested with 2.7.1)
 3. Chrome, Firefox, Safari, IE9+ (TODO -- verify)
+2. django_ckeditor_improved
 
 #Installation
 

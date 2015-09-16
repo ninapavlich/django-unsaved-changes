@@ -21,7 +21,10 @@
             persistant_data_class: 'has_persistant_data',
             has_unsaved_data_class: 'has_unsaved_data',
             form_submitted_threshold: 250,
-            ignore_types: []
+            ignore_types: [],
+            ignore_keys: ["old"],
+            debug: false,
+            initilize_delay: 1000
             //['.ui-autocomplete-input']
             //['.ui-autocomplete-input', '.grp-autocomplete-hidden-field',  "[name='csrfmiddlewaretoken']", "[placeholder='Filter']", ".ckeditorwidget"] //"[type='file']",
         };
@@ -38,6 +41,8 @@
         this.form_was_submitted = false;
         this.form_submitted_time = null;
 
+
+
         this.init();
     }
 
@@ -49,19 +54,28 @@
 
             this.form = $(this.element).find('form')[0];
             this.all_inputs = this.getAllEligibleInputs();
-            this.initial_data = this.getFormValues(this.form);
+            
       
+            
+            setTimeout(function(){
+                parent.initAfterDelay();
+            }, this.options.initilize_delay);
+            
+        },
+        initAfterDelay: function(){
+            
+            var parent = this;
+
+            this.initial_data = this.getFormValues(true);
 
             this.messages_container = $(this.element).find(".grp-messagelist")[0];
             if(this.options.use_persistant_storage){
-                $(this.element).find('form').garlic({
-                    onPersist: function ( elem, storedValue ) {
-                        //
-                    }
-                });
-                this.garlic_data = this.getFormValues(this.form);
+                
+                $(this.element).find('form').garlic();
+                this.garlic_data = this.getFormValues();
 
-                $(this.all_inputs).each(function(index, item) {
+                $(this.all_inputs).each(function(index, item_name) {
+                    var item = parent.getField(item_name);
                     if(item.name && parent.fieldHasPersistantData(item)){
 
                         parent.applyPersistantStyle(item);
@@ -101,10 +115,11 @@
 
             }
         
-            this.addListeners()
+            this.addListeners();
           
 
-            this.render()
+            this.render();
+
         },
         setProperty: function() {
           this.render()
@@ -134,9 +149,17 @@
                     }
                 }
                 if(eligible_type){
-                    output.push(item);    
+                    output.push(item.name); 
+                    
+                    // if(parent.options.debug){
+                    //     console.log("Unsaved Changes :: Adding Input "+item.name) 
+                    // }
+
                 }else{
-                    // console.log("Type "+item.name+" not eligible")
+                    if(parent.options.debug){
+                        console.log("Unsaved Changes :: Input "+item.name+" not eligible") 
+                    }
+                    
                 }
 
                 
@@ -145,11 +168,17 @@
             return output;
 
         },
+        getField: function(name){
+            var selector = "[name='"+name+"']";
+            // console.log("selector: "+selector)
+            return $(this.form).find(selector)[0];
+        },
         clearAllRestoredData: function(){
             var parent = this;
 
             //Remove all fields that aren't explicitely defined in allow_defaults
-            $(this.all_inputs).each(function(index, item) {
+            $(this.all_inputs).each(function(index, item_name) {
+                var item = parent.getField(item_name);
                 // if($(item).hasClass(parent.options.persistant_data_class)){
                 parent.clearRestoredDataForField(item);    
                 // }                
@@ -167,7 +196,7 @@
         },
         formHasPersistantData: function(){
             //todo
-            var areEqual = this.areObjectsEqual(this.initial_data, this.garlic_data, true);
+            var areEqual = this.areObjectsEqual(this.initial_data, this.garlic_data, this.options.ignore_keys);
             // console.log("persistant data equal? "+areEqual);
             return !areEqual;
         },
@@ -176,13 +205,13 @@
 
             if(same==false){
                 if(this.initial_data[field.name] instanceof Array || this.garlic_data[field.name]){
-                    same = this.areObjectsEqual(this.initial_data[field.name], this.garlic_data[field.name], true);
+                    same = this.areObjectsEqual(this.initial_data[field.name], this.garlic_data[field.name], this.optins.ignore_keys);
                 }
             }
 
-            // if(same==false){
-            //     console.log("persistant value for "+field.name+" is unequal: initial "+this.initial_data[field.name]+" != garlic "+this.garlic_data[field.name])
-            // }
+            if(same==false && this.options.debug){
+                console.log("Unsaved Changes :: Persistant value for "+field.name+" is unequal: initial "+this.initial_data[field.name]+" != garlic "+this.garlic_data[field.name])
+            }
             return !same
         },
         hasUnsavedChanges: function(){
@@ -191,10 +220,15 @@
                 * Changes in horizontal selector are not detected
                 * Changes in CKEditor are not detected
             */
-            this.current_data = this.getFormValues(this.form);
+            this.current_data = this.getFormValues();
             // window['current_data'] = this.current_data;
-            var areEqual = this.areObjectsEqual(this.initial_data, this.current_data, true);
-            return !areEqual;
+            var same = this.areObjectsEqual(this.initial_data, this.current_data, this.options.ignore_keys);
+            if(same==false && this.options.debug){
+                console.log("Unsaved Changes :: Form is UNEQUAL")
+            }else if(same==true && this.options.debug){
+                console.log("Unsaved Changes :: Form is EQUAL")
+            }
+            return !same;
         },
         addListeners: function() {
             //bind events
@@ -221,7 +255,9 @@
                 });
 
                 $(this.form).bind('submit', function(event){
-                    // event.preventDefault();
+                    event.preventDefault();
+                    parent.hasUnsavedChanges();
+
                     parent.form_was_submitted = true;
                     parent.form_submitted_time = new Date();
                 });
@@ -240,10 +276,14 @@
                 parent.render();
             });
 
-            $(this.all_inputs).change(function(event){
-              $(this).addClass(parent.options.has_unsaved_data_class)
-              $(this).parents(".grp-autocomplete-wrapper-m2m").addClass(parent.options.has_unsaved_data_class)
-            });
+            //TODO:
+            // $(this.all_inputs).each(function(index, item_name) {
+            //     var item = parent.getField(item_name);
+            //     $(item).change(function(event){
+            //       $(this).addClass(parent.options.has_unsaved_data_class)
+            //       $(this).parents(".grp-autocomplete-wrapper-m2m").addClass(parent.options.has_unsaved_data_class)
+            //     });
+            // });
         },
         applyPersistantStyle: function(field){
 
@@ -322,43 +362,59 @@
             }
             
         },
-        getFormValues: function(container){
+        getFormValues: function(debug){
+            if(typeof(debug) == 'undefined'){
+                debug = false;
+            }
             var output = {};
+            var parent = this;
             
-            var inputs = $(container).find(":input");
-
-            //Remove all fields that aren't explicitely defined in allow_defaults
-            $(inputs).each(function(index, item) {
-
+            
+            $(this.all_inputs).each(function(index, item_name) {
+                var item = parent.getField(item_name);
                 
                 var value =$(item).val();
                 var skip_item = String($(item).attr("type")).toLowerCase() == "checkbox" && item.checked==false;
                 var is_select_multiple = $(item).attr("multiple") !== undefined;
+                var is_ckeditor = $(item).hasClass('ckeditorwidget');
 
-            
                 if( skip_item ){
                     
-                    // console.log("skip this un-checked item..."+item.name);
+                    // console.log("--> skip this un-checked item..."+item_name);
                     //continue
 
                 }else if(is_select_multiple){
                     var vals = []; 
-                    $(item).find(':selected').each(function(i, selected){ 
+                    // $(item).find(':selected').each(function(i, selected){ 
+                    //   vals[i] = $(selected).val(); 
+                    // });
+                    //with GRP, it doesn't get selected until unload
+                    $(item).find('option').each(function(i, selected){ 
                       vals[i] = $(selected).val(); 
                     });
-                    output[item.name] = vals;
+                    output[item_name] = vals;
 
+                }else if(is_ckeditor){
+                    
+                    var editor_field = parent.getCKEditorInput(item);
+                    output[item_name] = editor_field.getData() || value;
+                    
                 }else{
                 
-                    if (output[item.name] !== undefined) {
-                        if (!output[item.name].push) {
-                            output[item.name] = [output[item.name]];
+                    if (output[item_name] !== undefined) {
+                        if (!output[item_name].push) {
+                            output[item_name] = [output[item_name]];
                         }
-                        output[item.name].push(value || '');
+                        output[item_name].push(value || '');
                     } else {
-                        output[item.name] = value || '';
+                        output[item_name] = value || '';
                     } 
                 }
+
+                // if(debug){
+                //     console.log("Unsaved Changes :: "+item+" "+item_name+" = "+output[item_name])    
+                // }
+                
 
                 
             });
@@ -402,50 +458,133 @@
         },
 
         /* Based on this: http://stackoverflow.com/questions/201183/how-to-determine-equality-for-two-javascript-objects/16788517#16788517*/
-        areObjectsEqual: function(x, y, allow_different_keys) {
+        areObjectsEqual: function(x, y, ignore_keys) {
             'use strict';
             var parent = this;
 
-            if (x === null || x === undefined || y === null || y === undefined) { return x === y; }
+            if (x === null || x === undefined || y === null || y === undefined) { 
+                if(parent.options.debug && x !== y){
+                    console.log("Unsaved Changes :: UNEQUAL undefined "+x+" vs "+y);
+                }
+                return x === y; 
+            }
             // after this just checking type of one would be enough
-            if (x.constructor !== y.constructor) { return false; }
+            if (x.constructor !== y.constructor) { 
+                if(parent.options.debug){
+                    console.log("Unsaved Changes :: UNEQUAL constructor "+x+" vs "+y);
+                }
+                return false; 
+            }
             // if they are functions, they should exactly refer to same one (because of closures)
-            if (x instanceof Function) { return x === y; }
+            if (x instanceof Function) { 
+                if(parent.options.debug && x !== y){
+                    console.log("Unsaved Changes :: UNEQUAL function "+x+" vs "+y);
+                }
+                return x === y; 
+            }
             // if they are regexps, they should exactly refer to same one (it is hard to better equality check on current ES)
             if (x instanceof RegExp) { return x === y; }
             if (x === y || x.valueOf() === y.valueOf()) { return true; }
-            if (Array.isArray(x) && x.length !== y.length) { return false; }
+            if (Array.isArray(x) && x.length !== y.length) { 
+                if(parent.options.debug){
+                    console.log("Unsaved Changes :: UNEQUAL array "+x+" vs "+y);
+                }
+                return false; 
+            }
 
             // if they are dates, they must had equal valueOf
-            if (x instanceof Date) { return false; }
+            if (x instanceof Date) { 
+                if(parent.options.debug){
+                    console.log("Unsaved Changes :: UNEQUAL date "+x+" vs "+y);
+                }
+                return false; 
+            }
 
             // if they are strictly equal, they both need to be object at least
-            if (!(x instanceof Object)) { return false; }
-            if (!(y instanceof Object)) { return false; }
+            if (!(x instanceof Object)) { 
+                if(parent.options.debug){
+                    console.log("Unsaved Changes :: UNEQUAL key "+x+" vs "+y);
+                }
+                return false; 
+            }
+            if (!(y instanceof Object)) { 
+                if(parent.options.debug){
+                    console.log("Unsaved Changes :: UNEQUAL key "+y+" vs "+x);
+                }
+                return false; 
+            }
 
             // recursive object equality check
-            var p = Object.keys(x);
-            if(allow_different_keys==false){
-                return Object.keys(y).every(function (i) {                
-                    return p.indexOf(i) !== -1; 
-                }) && p.every(function (i) { 
-                    return parent.areObjectsEqual(x[i], y[i], allow_different_keys); 
-                });    
-            }else{
-                return p.every(function (element, index, array) {
-                    if(element != '' && element in y){
-                        
-                        var same = parent.areObjectsEqual(x[element], y[element], allow_different_keys);     
-                        // if(same==false){
-                        //     console.log(element+" values are unequal: "+x[element]+" != "+y[element])
-                        // }
-                        return same;
-                    }else{
-                        return true;
-                    }                    
-                });
-            }
+            var x_keys = Object.keys(x);
+            var y_keys = Object.keys(y);
+
             
+
+
+            return Object.keys(y).every(function (i) {                
+                
+                var eligible = parent.isEligibleKey(i, ignore_keys);
+                // if(eligible==false && parent.options.debug){
+                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                // }
+                if(eligible==false){return true;}
+
+                var xindex = x_keys.indexOf(i);
+                var same = xindex !== -1;
+                if(same==false && parent.options.debug){
+                    console.log("Unsaved Changes :: UNEQUAL - Y doesn't have key "+i+" "+xindex);
+                }
+
+                return same;
+
+            }) && Object.keys(x).every(function (i) {                
+                
+                
+                var eligible = parent.isEligibleKey(i, ignore_keys);
+                // if(eligible==false && parent.options.debug){
+                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                // }
+                if(eligible==false){return true;}
+
+                var yindex = y_keys.indexOf(i);
+                var same = yindex !== -1;
+                if(same==false && parent.options.debug){
+                    console.log("Unsaved Changes :: UNEQUAL - X doesn't have key "+i+" "+yindex);
+                }
+
+                return same;
+
+            }) && x_keys.every(function (i) { 
+                var eligible = parent.isEligibleKey(i, ignore_keys);
+                // if(eligible==false && parent.options.debug){
+                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                // }
+                if(eligible==false){return true;}
+
+                return parent.areObjectsEqual(x[i], y[i], ignore_keys); 
+            }) && y_keys.every(function (i) { 
+                var eligible = parent.isEligibleKey(i, ignore_keys);
+                // if(eligible==false && parent.options.debug){
+                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                // }
+                if(eligible==false){return true;}
+
+                return parent.areObjectsEqual(x[i], y[i], ignore_keys); 
+            });
+            
+            
+        },
+        isEligibleKey: function(key_name, ignore_keys){
+            // console.log("key_name: "+key_name+" "+key_name.indexOf('old')+" keys? "+ignore_keys)
+            for(var k=0; k<ignore_keys.length; k++){
+                var ignore_key = ignore_keys[k];
+                var ignoreRegExp = new RegExp(ignore_key);
+
+                if (ignoreRegExp.test(key_name)) {
+                    return false;
+                }
+            }
+            return true;
         },
         initCKEditorIntegration: function(){
 
@@ -453,24 +592,30 @@
             $(this.element).find("textarea").each(function(index, field) {
                 if($(field).hasClass('ckeditorwidget')){
                     // console.log("init ckeditorwidget integration")
+                    if(parent.options.debug){
+                        console.log("Unsaved Changes :: Init CKEditor Integration for "+field.name);
+                    }
 
                     var editor_field = parent.getCKEditorInput(field);
                     
-                    $(editor_field).bind("keyup focus change", function(event){
+                    $(editor_field.container).bind("keyup focus change", function(event){
                         $(field).val( $(editor_field).html() )
                         $(field).garlic();
+
+                        if(parent.options.debug){
+                            console.log("Unsaved Changes :: Re-Garlic CKEditor Integration for "+field.name);
+                        }
                     });
 
                 }
             });
         },
         getCKEditorInput: function(field) {
-            var editor_id = $(field).attr("id");
+
             try{
-                var iframe = $("#"+editor_id).parent().find("iframe");
-                var iframedoc = iframe[0].contentWindow.document;
-                var body = $(iframedoc).find("body");
-                return body;          
+                var editor_id = $(field).attr("id");
+                return CKEDITOR.instances[editor_id];
+                      
             }catch(e){return null;}
         }
 
