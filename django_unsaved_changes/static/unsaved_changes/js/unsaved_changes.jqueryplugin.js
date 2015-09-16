@@ -255,7 +255,7 @@
                 });
 
                 $(this.form).bind('submit', function(event){
-                    event.preventDefault();
+                    // event.preventDefault();
                     parent.hasUnsavedChanges();
 
                     parent.form_was_submitted = true;
