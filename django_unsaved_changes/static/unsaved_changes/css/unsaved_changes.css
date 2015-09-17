@@ -113,12 +113,11 @@
 
 .has_persistant_data {
     /*border: 1px dotted #4fb2d3 !important;*/
-    background: rgba(181, 222, 236, 0.3);
+    background: rgba(181, 222, 236, 0.3) !important;
 }
 .has_unsaved_data {
-    border: 1px dotted #333 !important;
-    background #b5deec;
-    
+  background: rgba(181, 222, 236, 0.3) !important;
+  /*border-left: 5px solid #b5deec;*/
 }
 
 .grp-autocomplete-wrapper-m2m.has_persistant_data .has_persistant_data,

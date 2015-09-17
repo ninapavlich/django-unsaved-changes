@@ -24,6 +24,11 @@ class UnsavedChangesAdmin(admin.ModelAdmin):
             extra_context['UNSAVED_CHANGES_SUBMITTED_OVERLAY'] = False
 
         try:
+            extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS'] = settings.UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS if not hasattr(self, "UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS") else self.UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS
+        except:
+            extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS'] = False
+
+        try:
             extra_context['UNSAVED_CHANGES_PERSISTANT_STORAGE'] = settings.UNSAVED_CHANGES_PERSISTANT_STORAGE if not hasattr(self, "UNSAVED_CHANGES_PERSISTANT_STORAGE") else self.UNSAVED_CHANGES_PERSISTANT_STORAGE
         except:
             extra_context['UNSAVED_CHANGES_PERSISTANT_STORAGE'] = False

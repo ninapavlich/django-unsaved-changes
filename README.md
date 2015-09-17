@@ -42,6 +42,7 @@ though at this point I don't recommend using the third feature in production.
 	UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT = True
 	UNSAVED_CHANGES_SUMBITTED_ALERT = True
 	UNSAVED_CHANGES_SUBMITTED_OVERLAY = True
+	UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS = True
 	UNSAVED_CHANGES_PERSISTANT_STORAGE = False #not quite production ready
 
 	#Note that all four of these settins are False by default

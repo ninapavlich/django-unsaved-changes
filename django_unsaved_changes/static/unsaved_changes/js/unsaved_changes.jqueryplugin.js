@@ -69,6 +69,40 @@
             this.initial_data = this.getFormValues(true);
 
             this.messages_container = $(this.element).find(".grp-messagelist")[0];
+
+            
+            if(this.options.show_unsaved_changes_visuals){
+
+                $(this.all_inputs).each(function(index, item_name) {
+                    var item = parent.getField(item_name);
+                    
+                    var inputs = parent.getFieldInputs(item_name);
+                    var display_field = parent.getFieldDisplay(item);
+
+                    // console.log("found "+inputs.length+" inputs for "+item_name)
+
+                    $(inputs).each(function(index, input) {
+                        
+                        $(input).bind("keyup focus change", function(event){
+
+                            var same = parent.areObjectsEqual(parent.initial_data[item_name], parent.getFieldValue(item_name), parent.options.ignore_keys);
+                            
+                            if(!same){
+                                // console.log(item_name+" change? ("+parent.initial_data[item_name]+") vs ("+parent.getFieldValue(item_name)+")")
+                                $(display_field).addClass(parent.options.has_unsaved_data_class);    
+                            }else{
+                                // console.log("same same "+parent.getFieldValue(item_name))
+                                $(display_field).removeClass(parent.options.has_unsaved_data_class);    
+                            }
+                            
+                            
+                        });
+                    });
+
+                    
+                });
+
+            }
             if(this.options.use_persistant_storage){
                 
                 $(this.element).find('form').garlic();
@@ -168,11 +202,188 @@
             return output;
 
         },
-        getField: function(name){
-            var selector = "[name='"+name+"']";
-            // console.log("selector: "+selector)
-            return $(this.form).find(selector)[0];
+        getFormValues: function(debug){
+            if(typeof(debug) == 'undefined'){
+                debug = false;
+            }
+            var output = {};
+            var parent = this;
+            
+            
+            $(this.all_inputs).each(function(index, item_name) {
+                output[item_name] = parent.getFieldValue(item_name);
+                
+            });
+
+            return output;
         },
+        getField: function(name, allow_multiple){
+            if(typeof(allow_multiple) == 'undefined'){
+                allow_multiple = false;
+            }
+
+            var selector = "[name='"+name+"']";
+            // console.log("selector: "+selector+" "+$(this.form).find(selector).length)
+            if(allow_multiple){
+                return $(this.form).find(selector);
+            }else{
+                return $(this.form).find(selector).first();    
+            }
+            
+        },
+        getFieldContainer: function(item){
+            //returns the container around the input
+            return $(item).parents('.grp-cell, .grp-row, .grp-tr').first();
+        },
+        getFieldDisplay: function(item){
+            //returns the container around the input
+            return $(item).parents('.grp-cell, .grp-row, .grp-td').first();
+        },
+        getFieldInputs: function(item_name){
+            //returns the actual input/inputs that change
+            var items = this.getField(item_name, true);
+            var item_list = $(items).toArray()
+            var is_ckeditor = $(items).hasClass('ckeditorwidget');
+            var is_horizontal_select_multiple = $(items).attr("multiple") !== undefined && $(items).parents('.grp-related-widget-wrapper').length > 0;
+
+            
+
+            if(is_ckeditor){
+
+                try{
+
+                    var editor_container_id = $(CKEDITOR.instances['id_'+item_name].container).attr("id");
+                    var iframe = $(this.form).find("#"+editor_container_id).find("iframe")[0];
+                    var body = $(iframe.contentWindow.document).find("body")
+                    item_list.push(body);
+                      
+                }catch(e){}
+                
+
+            }else if(is_horizontal_select_multiple){
+                var old_select = this.getField(item_name+"_old")
+                item_list.push(old_select);
+
+                var links = $(items).parents('.grp-related-widget-wrapper').find('a').toArray();
+                item_list = item_list.concat(links);
+            }
+            // console.log("items? "+item_name+" is_ckeditor? "+is_ckeditor+" is_horizontal_select_multiple? "+is_horizontal_select_multiple+" = "+item_list.length+" "+items)
+            return item_list;     
+        },
+
+
+        getFieldValue: function(field_name, debug){
+            /*
+                Input Types:
+                - text / password / 
+                - textarea
+                - select
+                - multiple select
+                - radiogroup / checkgroup
+                - checkbox
+                - file field
+            */
+
+            if(typeof(debug) == 'undefined'){
+                debug = false;
+            }
+            var output = {};
+            var parent = this;
+            
+
+            var matching_fields = this.getField(field_name, true);
+
+            if(matching_fields.length > 1){
+                //This is a multi-value item...
+                value = [];
+                for(var k=0; k<matching_fields.length; k++){
+                    var matching_field = matching_fields[k];
+                    value.append($(matching_field).val());
+                }
+
+                if(debug){
+                    console.log("multi value "+field_name+" = "+value)    
+                }
+                
+                return value;
+
+            }else{
+
+                var item = $(matching_fields).first();
+                var value = $(item).val();
+                var is_unchecked_checkbox = String($(item).attr("type")).toLowerCase() == "checkbox" && $(item).is(':checked')==false;
+                var is_select_multiple = $(item).attr("multiple") !== undefined;
+                var is_horizontal_select_multiple = $(item).attr("multiple") !== undefined && $(item).parents('.grp-related-widget-wrapper').length > 0;
+                var is_ckeditor = $(item).hasClass('ckeditorwidget');
+
+
+                if( is_unchecked_checkbox ){
+                        
+                    value = '';
+
+                }else if(is_horizontal_select_multiple){
+                    value = []; 
+                    //with GRP, it doesn't get selected until unload
+                    $(item).find('option').each(function(i, selected){ 
+                      value[i] = $(selected).val(); 
+                    });
+
+                }else if(is_select_multiple){
+
+                    value = []; 
+                    $(item).find(':selected').each(function(i, selected){ 
+                      value[i] = $(selected).val(); 
+                    });
+                    
+
+                }else if(is_ckeditor){
+                    
+                    var editor_field = parent.getCKEditorInput(item);
+                    value = editor_field!= null? editor_field.getData() || value : value;
+                    
+                }
+
+                return value;
+
+            }
+
+        },
+
+        setFieldValue: function(field, value){
+            //TODO -- handle other field types...
+            // console.log("set field value: "+value)
+
+            var is_checkbox =  String($(field).attr("type")).toLowerCase() == "checkbox";
+
+            if(is_checkbox){
+                if(String(value).toLowerCase()=="on"){
+                    $(field).prop('checked', true);    
+                }else{
+                    $(field).prop('checked', false);
+                }
+                
+            }else{
+                $(field).attr('value', value);
+                $(field).val(value);
+            }
+            
+
+
+            if($(field).hasClass('vForeignKeyRawIdAdminField') || $(field).hasClass('vManyToManyRawIdAdminField')){
+                $(field).trigger("change")
+            }
+
+            
+        },
+
+        getPrettyName: function(field){
+            var name = field.name;
+            var pieces = name.split('-');
+            var first_piece = pieces[pieces.length-1];
+            var replaced_spaces = first_piece.replace(/_/g, ' ');
+            return replaced_spaces;
+        },
+
         clearAllRestoredData: function(){
             var parent = this;
 
@@ -276,14 +487,7 @@
                 parent.render();
             });
 
-            //TODO:
-            // $(this.all_inputs).each(function(index, item_name) {
-            //     var item = parent.getField(item_name);
-            //     $(item).change(function(event){
-            //       $(this).addClass(parent.options.has_unsaved_data_class)
-            //       $(this).parents(".grp-autocomplete-wrapper-m2m").addClass(parent.options.has_unsaved_data_class)
-            //     });
-            // });
+
         },
         applyPersistantStyle: function(field){
 
@@ -292,7 +496,8 @@
             var tools = $('<div class="persistant-data-field-tools">\
                 <a href="#" class="clear-persistant-data">Clear restored data for &ldquo;'+this.getPrettyName(field)+'&rdquo;</a></div>');
 
-            var display_field = $(field).parents('.grp-cell, .grp-row, .grp-tr')[0];
+            var display_field = parent.getFieldDisplay(field);
+            var container_field = parent.getFieldContainer(field);
             $(tools).find("a.clear-persistant-data").bind("click", function(event){
                 event.preventDefault();
                 parent.clearRestoredDataForField(field);
@@ -302,7 +507,7 @@
 
             $(field).data('persistant-data-field-tools', tools);
             $(display_field).addClass(this.options.persistant_data_class);     
-            $(display_field).append(tools);
+            $(container_field).append(tools);
 
             if($(field).hasClass('vForeignKeyRawIdAdminField') || $(field).hasClass('vManyToManyRawIdAdminField')){
                 $(field).trigger("change")
@@ -314,7 +519,7 @@
         },
         removePersistantStyle: function(field){
 
-            var display_field = $(field).parents('.grp-cell, .grp-row, .grp-tr')[0];
+            var display_field = this.getFieldDisplay(field);
             $(display_field).removeClass(this.options.persistant_data_class);     
 
             var tools = $(field).data('persistant-data-field-tools');
@@ -362,101 +567,7 @@
             }
             
         },
-        getFormValues: function(debug){
-            if(typeof(debug) == 'undefined'){
-                debug = false;
-            }
-            var output = {};
-            var parent = this;
-            
-            
-            $(this.all_inputs).each(function(index, item_name) {
-                var item = parent.getField(item_name);
-                
-                var value =$(item).val();
-                var skip_item = String($(item).attr("type")).toLowerCase() == "checkbox" && item.checked==false;
-                var is_select_multiple = $(item).attr("multiple") !== undefined;
-                var is_ckeditor = $(item).hasClass('ckeditorwidget');
-
-                if( skip_item ){
-                    
-                    // console.log("--> skip this un-checked item..."+item_name);
-                    //continue
-
-                }else if(is_select_multiple){
-                    var vals = []; 
-                    // $(item).find(':selected').each(function(i, selected){ 
-                    //   vals[i] = $(selected).val(); 
-                    // });
-                    //with GRP, it doesn't get selected until unload
-                    $(item).find('option').each(function(i, selected){ 
-                      vals[i] = $(selected).val(); 
-                    });
-                    output[item_name] = vals;
-
-                }else if(is_ckeditor){
-                    
-                    var editor_field = parent.getCKEditorInput(item);
-                    output[item_name] = editor_field.getData() || value;
-                    
-                }else{
-                
-                    if (output[item_name] !== undefined) {
-                        if (!output[item_name].push) {
-                            output[item_name] = [output[item_name]];
-                        }
-                        output[item_name].push(value || '');
-                    } else {
-                        output[item_name] = value || '';
-                    } 
-                }
-
-                // if(debug){
-                //     console.log("Unsaved Changes :: "+item+" "+item_name+" = "+output[item_name])    
-                // }
-                
-
-                
-            });
-
-            return output;
-        },
-
-        setFieldValue: function(field, value){
-            //TODO -- handle other field types...
-            // console.log("set field value: "+value)
-
-            var is_checkbox =  String($(field).attr("type")).toLowerCase() == "checkbox";
-
-            if(is_checkbox){
-                if(String(value).toLowerCase()=="on"){
-                    $(field).prop('checked', true);    
-                }else{
-                    $(field).prop('checked', false);
-                }
-                
-            }else{
-                $(field).attr('value', value);
-                $(field).val(value);
-            }
-            
-
-
-            if($(field).hasClass('vForeignKeyRawIdAdminField') || $(field).hasClass('vManyToManyRawIdAdminField')){
-                $(field).trigger("change")
-            }
-
-            
-        },
-
-        getPrettyName: function(field){
-            var name = field.name;
-            var pieces = name.split('-');
-            var first_piece = pieces[pieces.length-1];
-            var replaced_spaces = first_piece.replace(/_/g, ' ');
-            return replaced_spaces;
-        },
-
+        
         /* Based on this: http://stackoverflow.com/questions/201183/how-to-determine-equality-for-two-javascript-objects/16788517#16788517*/
         areObjectsEqual: function(x, y, ignore_keys) {
             'use strict';
@@ -598,15 +709,16 @@
 
                     var editor_field = parent.getCKEditorInput(field);
                     
-                    $(editor_field.container).bind("keyup focus change", function(event){
-                        $(field).val( $(editor_field).html() )
-                        $(field).garlic();
+                    if(editor_field!=null){
+                        $(editor_field.container).bind("keyup focus change", function(event){
+                            $(field).val( $(editor_field).getData() )
+                            $(field).garlic();
 
-                        if(parent.options.debug){
-                            console.log("Unsaved Changes :: Re-Garlic CKEditor Integration for "+field.name);
-                        }
-                    });
-
+                            if(parent.options.debug){
+                                console.log("Unsaved Changes :: Re-Garlic CKEditor Integration for "+field.name);
+                            }
+                        });
+                    }
                 }
             });
         },
