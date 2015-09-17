@@ -338,8 +338,10 @@
 
                 }else if(is_ckeditor){
                     
-                    var editor_field = parent.getCKEditorInput(item);
-                    value = editor_field!= null? editor_field.getData() || value : value;
+                    try{
+                        var editor_field = parent.getCKEditorInput(item);
+                        value = editor_field.getData();
+                    }catch(e){}
                     
                 }
 
