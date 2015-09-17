@@ -1,19 +1,25 @@
 # django-unsaved-changes
 
-#Features
+#Features / Settings
 
-1. (Optional) Alert admin when they are about to close a window that has 
-	unsaved changes.
+1. UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT :: Alert admin when they are about to 
+	close a window that has unsaved changes. 
 ![Unload Notification](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/unload_notification.png)
 
-2. (Optional) Display an overlay indicating that the form has been submitted 
-	and is processing. This feature is in response to many admins that I've 
-	worked with that were unsure that the form was being submitted and so 
-	submitted it multiple times.
+2. UNSAVED_CHANGES_SUBMITTED_OVERLAY ::  Display an overlay indicating that 
+	the form has been submitted and is processing. This feature is in response 
+	to many admins that I've worked with that were unsure that the form was 
+	being submitted and so submitted it multiple times. 
 ![Saving Overlay](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/saving_overlay.png)
 
-3. (Optional) Restore changed field values if window is accidentally closed. 
-	This feature uses garlic.js
+3. UNSAVED_CHANGES_SUMBITTED_ALERT :: Alert admin when they are trying to 
+	navigate away from the window after hitting the submit button.
+
+4. UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS :: Show a visual indication when 
+	a field has been modified.
+
+5. UNSAVED_CHANGES_PERSISTANT_STORAGE :: Restore changed field values if 
+	window is accidentally closed. This feature uses garlic.js
 ![Garlic Notification](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/garlic_notification.png)
 
 You can use any combination of these three features using the settings below, 
@@ -60,6 +66,7 @@ Either extend the example admin:
 		# UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT = False
 		# UNSAVED_CHANGES_SUMBITTED_ALERT = False
 		# UNSAVED_CHANGES_SUBMITTED_OVERLAY = False
+		# UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS = False
 		# UNSAVED_CHANGES_PERSISTANT_STORAGE = False
 
 Or simply add the necessary template and context variables to your existing admin view:
@@ -74,6 +81,7 @@ Or simply add the necessary template and context variables to your existing admi
 	        extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT'] = True
 	        extra_context['UNSAVED_CHANGES_SUMBITTED_ALERT'] = True
 	        extra_context['UNSAVED_CHANGES_SUBMITTED_OVERLAY'] = True
+	        extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS'] = True
 	        extra_context['UNSAVED_CHANGES_PERSISTANT_STORAGE'] = False
 	        return super(MyModelAdmin, self).change_view(request, object_id, form_url, extra_context)
 
