@@ -110,7 +110,8 @@
 
                 $(this.all_inputs).each(function(index, item_name) {
                     var item = parent.getField(item_name);
-                    if(item.name && parent.fieldHasPersistantData(item)){
+
+                    if(item_name && parent.fieldHasPersistantData(item)){
 
                         parent.applyPersistantStyle(item);
                     }
@@ -218,16 +219,16 @@
             return output;
         },
         getField: function(name, allow_multiple){
-            if(typeof(allow_multiple) == 'undefined'){
+            if(typeof(allow_multiple) === 'undefined'){
                 allow_multiple = false;
             }
 
             var selector = "[name='"+name+"']";
-            // console.log("selector: "+selector+" "+$(this.form).find(selector).length)
+            // console.log("selector: "+selector+" "+$(this.form).find(selector).length+" allow_multiple? "+allow_multiple)
             if(allow_multiple){
                 return $(this.form).find(selector);
             }else{
-                return $(this.form).find(selector).first();    
+                return $(this.form).find(selector)[0];
             }
             
         },
@@ -392,9 +393,11 @@
             //Remove all fields that aren't explicitely defined in allow_defaults
             $(this.all_inputs).each(function(index, item_name) {
                 var item = parent.getField(item_name);
-                // if($(item).hasClass(parent.options.persistant_data_class)){
-                parent.clearRestoredDataForField(item);    
-                // }                
+                var display_field = parent.getFieldDisplay(item);
+
+                if($(display_field).hasClass(parent.options.persistant_data_class)){
+                    parent.clearRestoredDataForField(item);    
+                }                
             });
         },
         clearRestoredDataForField: function(field){
@@ -410,7 +413,6 @@
         formHasPersistantData: function(){
             //todo
             var areEqual = this.areObjectsEqual(this.initial_data, this.garlic_data, this.options.ignore_keys);
-            // console.log("persistant data equal? "+areEqual);
             return !areEqual;
         },
         fieldHasPersistantData: function(field){
@@ -418,7 +420,7 @@
 
             if(same==false){
                 if(this.initial_data[field.name] instanceof Array || this.garlic_data[field.name]){
-                    same = this.areObjectsEqual(this.initial_data[field.name], this.garlic_data[field.name], this.optins.ignore_keys);
+                    same = this.areObjectsEqual(this.initial_data[field.name], this.garlic_data[field.name], this.options.ignore_keys);
                 }
             }
 
@@ -637,9 +639,9 @@
             return Object.keys(y).every(function (i) {                
                 
                 var eligible = parent.isEligibleKey(i, ignore_keys);
-                // if(eligible==false && parent.options.debug){
-                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
-                // }
+                if(eligible==false && parent.options.debug){
+                    console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                }
                 if(eligible==false){return true;}
 
                 var xindex = x_keys.indexOf(i);
@@ -654,9 +656,9 @@
                 
                 
                 var eligible = parent.isEligibleKey(i, ignore_keys);
-                // if(eligible==false && parent.options.debug){
-                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
-                // }
+                if(eligible==false && parent.options.debug){
+                    console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                }
                 if(eligible==false){return true;}
 
                 var yindex = y_keys.indexOf(i);
@@ -669,17 +671,17 @@
 
             }) && x_keys.every(function (i) { 
                 var eligible = parent.isEligibleKey(i, ignore_keys);
-                // if(eligible==false && parent.options.debug){
-                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
-                // }
+                if(eligible==false && parent.options.debug){
+                    console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                }
                 if(eligible==false){return true;}
 
                 return parent.areObjectsEqual(x[i], y[i], ignore_keys); 
             }) && y_keys.every(function (i) { 
                 var eligible = parent.isEligibleKey(i, ignore_keys);
-                // if(eligible==false && parent.options.debug){
-                //     console.log("Unsaved Changes :: INELIGIBLE key "+i);
-                // }
+                if(eligible==false && parent.options.debug){
+                    console.log("Unsaved Changes :: INELIGIBLE key "+i);
+                }
                 if(eligible==false){return true;}
 
                 return parent.areObjectsEqual(x[i], y[i], ignore_keys); 

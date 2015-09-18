@@ -26,7 +26,7 @@
           'use_submitted_alert':{{UNSAVED_CHANGES_SUMBITTED_ALERT|lower}},
           'use_submitted_overlay':{{UNSAVED_CHANGES_SUBMITTED_OVERLAY|lower}},
           'show_unsaved_changes_visuals':{{UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS|lower}},
-          'debug':false
+          'debug':true
 
         }
       );
@@ -50,5 +50,9 @@
       {% endfor %}
       {% endif %}
   </ul>
-    
+  <!-- <div class="autosave-notification">
+    <a href="#" class="grp-button auto-save-on">Auto-Save On</a>
+    <a href="#" class="grp-button auto-save-off">Auto-Save Off</a>
+    <span class="auto-save-status">Saving...Last Saved ()</span>
+  </div> -->
 {% endblock %}

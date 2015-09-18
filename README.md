@@ -20,10 +20,15 @@
 
 5. UNSAVED_CHANGES_PERSISTANT_STORAGE :: Restore changed field values if 
 	window is accidentally closed. This feature uses garlic.js
+	This feature is not quite production ready, since some widgets only update
+	the input field when the form is submitted and so this may not work as 
+	expected. 
 ![Garlic Notification](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/garlic_notification.png)
 
+
 You can use any combination of these three features using the settings below, 
-though at this point I don't recommend using the third feature in production.
+though at this point I don't recommend using the 
+UNSAVED_CHANGES_PERSISTANT_STORAGE feature on forms that use complex widgets.
 
 
 #Compatibility / Requirements
