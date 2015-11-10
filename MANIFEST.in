@@ -1,2 +1,7 @@
-include README.rst
-recursive-include media/ *
+include README.md
+include LICENSE.txt
+include django_unsaved_changes/static/unsaved_changes/css/*.css
+include django_unsaved_changes/static/unsaved_changes/js/*.js
+include django_unsaved_changes/static/unsaved_changes/js/vendor/*.js
+include django_unsaved_changes/templates/admin/django_unsaved_changes/*.html
+recursive-include django_unsaved_changes/ *.py *.css *.js *.html

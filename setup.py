@@ -2,19 +2,25 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'django-unsaved-changes',
-    packages = ['django_unsaved_changes'],
-    version = '0.8',
-    description = 'UX improvements for admin',
+    version = '0.9',
     author = 'Nina Pavlich',
     author_email='nina@ninalp.com',
     url = 'https://github.com/ninapavlich/django-unsaved-changes',
-    keywords = ['libraries', 'web development', 'cms', 'django', 'django-grappelli'],
+    license = "MIT",
+
+    description = 'UX improvements for admin',
+    keywords = ['libraries', 'web development'],
+
+    include_package_data = True,
+    packages = ['django_unsaved_changes'],
+    
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
-        'License :: OSI Approved',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python'
     ]
