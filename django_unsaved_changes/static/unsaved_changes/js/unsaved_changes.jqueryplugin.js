@@ -299,7 +299,7 @@
                 value = [];
                 for(var k=0; k<matching_fields.length; k++){
                     var matching_field = matching_fields[k];
-                    value.append($(matching_field).val());
+                    value.push($(matching_field).val());
                 }
 
                 if(debug){

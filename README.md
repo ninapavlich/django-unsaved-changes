@@ -33,10 +33,9 @@ UNSAVED_CHANGES_PERSISTANT_STORAGE feature on forms that use complex widgets.
 
 #Compatibility / Requirements
 
-1. Django (last tested with 1.8.2)
+1. Django (last tested with 1.10.4)
 2. django-grappelli (last tested with 2.7.1)
 3. Chrome, Firefox, Safari, IE9+ (TODO -- verify)
-2. django_ckeditor_improved
 
 #Installation
 
