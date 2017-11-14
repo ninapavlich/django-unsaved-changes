@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-unsaved-changes',
-    version='1.0.0',
+    version='1.0.1',
     author='Nina Pavlich',
     author_email='nina@ninalp.com',
     url='https://github.com/ninapavlich/django-unsaved-changes',

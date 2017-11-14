@@ -47,14 +47,14 @@ class UnsavedChangesAdminMixin(object):
         extra_context = extra_context or {}
         extra_context = self.add_unsaved_changes_context(extra_context)
 
-        return super(UnsavedChangesAdmin, self).change_view(request, object_id, form_url, extra_context)
+        return super(UnsavedChangesAdminMixin, self).change_view(request, object_id, form_url, extra_context)
 
     def add_view(self, request, form_url='', extra_context=None):
 
         extra_context = extra_context or {}
         extra_context = self.add_unsaved_changes_context(extra_context)
 
-        return super(UnsavedChangesAdmin, self).add_view(request, form_url, extra_context)
+        return super(UnsavedChangesAdminMixin, self).add_view(request, form_url, extra_context)
 
 
 class UnsavedChangesAdmin(UnsavedChangesAdminMixin, admin.ModelAdmin):
