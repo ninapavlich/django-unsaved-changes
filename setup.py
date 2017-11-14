@@ -1,19 +1,19 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = 'django-unsaved-changes',
-    version = '0.10',
-    author = 'Nina Pavlich',
+    name='django-unsaved-changes',
+    version='0.11',
+    author='Nina Pavlich',
     author_email='nina@ninalp.com',
-    url = 'https://github.com/ninapavlich/django-unsaved-changes',
-    license = "MIT",
+    url='https://github.com/ninapavlich/django-unsaved-changes',
+    license="MIT",
 
-    description = 'UX improvements for admin',
-    keywords = ['libraries', 'web development'],
+    description='UX improvements for admin',
+    keywords=['libraries', 'web development'],
 
-    include_package_data = True,
-    packages = ['django_unsaved_changes'],
-    
+    include_package_data=True,
+    packages=['django_unsaved_changes'],
+
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

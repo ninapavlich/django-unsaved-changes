@@ -74,20 +74,12 @@ Either extend the example admin:
 		# UNSAVED_CHANGES_PERSISTANT_STORAGE = False
 
 Or simply add the necessary template and context variables to your existing admin view:
-	
-	class MyModelAdmin(UnsavedChangesAdmin):
 
-		change_form_template = "admin/django_unsaved_changes/change_form.html"
- 		
- 		def change_view(self, request, object_id, form_url='', extra_context=None):
-        
-	        extra_context = extra_context or {}
-	        extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT'] = True
-	        extra_context['UNSAVED_CHANGES_SUMBITTED_ALERT'] = True
-	        extra_context['UNSAVED_CHANGES_SUBMITTED_OVERLAY'] = True
-	        extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS'] = True
-	        extra_context['UNSAVED_CHANGES_PERSISTANT_STORAGE'] = False
-	        return super(MyModelAdmin, self).change_view(request, object_id, form_url, extra_context)
+	from django_unsaved_changes.admin import UnsavedChangesAdminMixin
+	
+	class MyCustomAdmin(UnsavedChangesAdminMixin, admin.ModelAdmin):
+
+		pass
 
 #Known Issues
 
