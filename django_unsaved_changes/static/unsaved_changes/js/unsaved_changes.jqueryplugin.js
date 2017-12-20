@@ -149,6 +149,8 @@
 
 
             }
+
+
         
             this.addListeners();
           
@@ -234,11 +236,11 @@
         },
         getFieldContainer: function(item){
             //returns the container around the input
-            return $(item).parents('.grp-cell, .grp-row, .grp-tr').first();
+            return $(item).parents('.grp-cell, .grp-row, .grp-tr, .form-row').first();
         },
         getFieldDisplay: function(item){
             //returns the container around the input
-            return $(item).parents('.grp-cell, .grp-row, .grp-td').first();
+            return $(item).parents('.grp-cell, .grp-row, .grp-td, .form-row').first();
         },
         getFieldInputs: function(item_name){
             //returns the actual input/inputs that change
@@ -481,8 +483,18 @@
                 $(this.form).bind('submit', function(event){
                     $(parent.overlay).fadeIn();
                 });
+            }
 
 
+            if(this.options.keyboard_shortcut_save){
+                
+                $(document).bind("keydown", function (event) {
+                    if (event.ctrlKey) {
+                        if(event.originalEvent.code == "KeyS"){
+                            $(parent.form).submit();                            
+                        }
+                    }
+                });
             }
 
           
@@ -748,7 +760,7 @@
         });
     };
 
-})( grp.jQuery, window, document );
+})( jquery_unsaved_changes, window, document );
 
 //$( document ).ready(function() {
 //  $(".selector").pluginName();

@@ -1,34 +1,30 @@
 {% extends "admin/change_form.html" %}
-{% load admin_static %}{% load i18n grp_tags %}
+{% load admin_static %}{% load i18n unsaved_changes_tags %}
 
-<!-- STYLESHEETS -->
-{% block stylesheets %}
-    {{ block.super }}
 
-    <link href="{% static "unsaved_changes/css/unsaved_changes.css" %}" rel="stylesheet" type="text/css" media="screen" />
-{% endblock %}
+{% block extrahead %}
+  
+  <!-- STYLESHEETS -->
+  <link href="{% static "unsaved_changes/css/unsaved_changes.css" %}" rel="stylesheet" type="text/css" media="screen" />
+    
+  {{ block.super }}
 
-<!-- JAVASCRIPTS -->
-{% block javascripts %}
-  {{block.super}}
+  <!-- JAVASCRIPTS -->
+  <script type="text/javascript" src="{% static 'unsaved_changes/js/vendor/jquery.js' %}"></script>
+  <script type="text/javascript">
+  var jquery_unsaved_changes = $.noConflict(true);
+  </script>
 
   <script type="text/javascript" src="{% static 'unsaved_changes/js/vendor/garlic.js' %}"></script>
   <script type="text/javascript" src="{% static 'unsaved_changes/js/unsaved_changes.jqueryplugin.js' %}"></script>
 
   <script>
-    grp.jQuery( document ).ready(function() {
-      grp.jQuery(document).unsavedChanges(
-        {
-          'lookup_url':"{% url 'grp_m2m_lookup' %}",
-          'autocomplete_lookup_url':"{% url 'grp_autocomplete_lookup' %}",
-          'use_persistant_storage':{{UNSAVED_CHANGES_PERSISTANT_STORAGE|lower}},
-          'use_unsaved_changes_alert':{{UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT|lower}},
-          'use_submitted_alert':{{UNSAVED_CHANGES_SUMBITTED_ALERT|lower}},
-          'use_submitted_overlay':{{UNSAVED_CHANGES_SUBMITTED_OVERLAY|lower}},
-          'show_unsaved_changes_visuals':{{UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS|lower}},
-          'debug':true
 
-        }
+    {% get_unsaved_changes_settings as unsaved_changes_settings %}
+
+    jquery_unsaved_changes( document ).ready(function() {
+      jquery_unsaved_changes(document).unsavedChanges(
+        {{ unsaved_changes_settings|safe }}
       );
     });
   </script>
@@ -37,22 +33,3 @@
 
 {% endblock %}
 
-
-<!-- MESSAGES -->
-{% block messages %}
-    
-  <ul class="grp-messagelist">
-    
-      {% if messages %}
-      <!-- NOTE: no message|capfirst by purpose, because it does not work in some languages -->
-      {% for message in messages %}
-          <li{% if message.tags %} class="grp-{{ message.tags }}"{% endif %}>{{ message }}</li>
-      {% endfor %}
-      {% endif %}
-  </ul>
-  <!-- <div class="autosave-notification">
-    <a href="#" class="grp-button auto-save-on">Auto-Save On</a>
-    <a href="#" class="grp-button auto-save-off">Auto-Save Off</a>
-    <span class="auto-save-status">Saving...Last Saved ()</span>
-  </div> -->
-{% endblock %}

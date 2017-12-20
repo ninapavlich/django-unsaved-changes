@@ -432,4 +432,4 @@
   });
 
 // This plugin works with jQuery or Zepto (with data extension builded for Zepto. See changelog 0.0.6)
-}(grp.jQuery);
+}(jquery_unsaved_changes);

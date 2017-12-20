@@ -1,6 +1,6 @@
 # django-unsaved-changes
 
-#Features / Settings
+#Features
 
 1. UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT :: Alert admin when they are about to 
 	close a window that has unsaved changes. 
@@ -18,7 +18,10 @@
 4. UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS :: Show a visual indication when 
 	a field has been modified.
 
-5. UNSAVED_CHANGES_PERSISTANT_STORAGE :: Restore changed field values if 
+5. UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE :: Trigger a save when a user
+	instinctively types ctrl + s on the keyboard to save.
+
+6. UNSAVED_CHANGES_PERSISTANT_STORAGE :: Restore changed field values if 
 	window is accidentally closed. This feature uses garlic.js
 	This feature is not quite production ready, since some widgets only update
 	the input field when the form is submitted and so this may not work as 
@@ -33,9 +36,9 @@ UNSAVED_CHANGES_PERSISTANT_STORAGE feature on forms that use complex widgets.
 
 #Compatibility / Requirements
 
-1. Django (last tested with 1.10.4)
-2. django-grappelli (last tested with 2.7.1)
-3. Chrome, Firefox, Safari, IE9+ (TODO -- verify)
+1. Django (last tested with 1.11.1)
+
+This admin was optimized for django-grappelli but works with the default django admin.
 
 #Installation
 
@@ -53,6 +56,7 @@ UNSAVED_CHANGES_PERSISTANT_STORAGE feature on forms that use complex widgets.
 	UNSAVED_CHANGES_SUMBITTED_ALERT = True
 	UNSAVED_CHANGES_SUBMITTED_OVERLAY = True
 	UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS = True
+	UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE = True
 	UNSAVED_CHANGES_PERSISTANT_STORAGE = False #not quite production ready
 
 	#Note that all four of these settins are False by default
@@ -71,6 +75,7 @@ Either extend the example admin:
 		# UNSAVED_CHANGES_SUMBITTED_ALERT = False
 		# UNSAVED_CHANGES_SUBMITTED_OVERLAY = False
 		# UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS = False
+		UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE = False
 		# UNSAVED_CHANGES_PERSISTANT_STORAGE = False
 
 Or simply add the necessary template and context variables to your existing admin view:
