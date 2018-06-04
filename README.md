@@ -1,6 +1,6 @@
 # django-unsaved-changes
 
-#Features
+## Features
 
 1. UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT :: Alert admin when they are about to 
 	close a window that has unsaved changes. 
@@ -34,17 +34,17 @@ though at this point I don't recommend using the
 UNSAVED_CHANGES_PERSISTANT_STORAGE feature on forms that use complex widgets.
 
 
-#Compatibility / Requirements
+## Compatibility / Requirements
 
-1. Django (last tested with 1.11.1)
+1. Django (Last tested with 1.11.1 and 2.0.2)
 
 This admin was optimized for django-grappelli but works with the default django admin.
 
-#Installation
+## Installation
 
     pip install django-unsaved-changes
 
-##settings.py
+### settings.py
 
     INSTALLED_APPS = (
       ...  
@@ -61,7 +61,7 @@ This admin was optimized for django-grappelli but works with the default django 
 
 	#Note that all four of these settins are False by default
 
-##admin.py
+### admin.py
   
 Either extend the example admin:
 
@@ -86,6 +86,6 @@ Or simply add the necessary template and context variables to your existing admi
 
 		pass
 
-#Known Issues
+## Known Issues
 
 	* Garlic persistant data detection not quite working with Grappelli Horizontal widget, WYSIWYG widgets, File uploads
