@@ -23,7 +23,7 @@
     {% get_unsaved_changes_settings as unsaved_changes_settings %}
 
     jquery_unsaved_changes( document ).ready(function() {
-      jquery_unsaved_changes(document).unsavedChanges(
+      jquery_unsaved_changes('form').unsavedChanges(
         {{ unsaved_changes_settings|safe }}
       );
     });
@@ -33,3 +33,15 @@
 
 {% endblock %}
 
+{% block field_sets %}
+<div class="unsaved_changes">
+  
+  <p class="errornote">
+      this is an error container
+  </p>    
+  <p class="infonote">
+      this is an info container
+  </p>  
+</div>  
+{{block.super}}
+{% endblock %}

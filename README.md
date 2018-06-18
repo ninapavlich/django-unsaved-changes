@@ -1,5 +1,7 @@
 # django-unsaved-changes
 
+This admin add-on adds some much-needed UX imrovements in the Django admin.
+
 ## Features
 
 1. UNSAVED_CHANGES_UNSAVED_CHANGES_ALERT :: Alert admin when they are about to 
@@ -21,24 +23,13 @@
 5. UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE :: Trigger a save when a user
 	instinctively types ctrl + s on the keyboard to save.
 
-6. UNSAVED_CHANGES_PERSISTANT_STORAGE :: Restore changed field values if 
-	window is accidentally closed. This feature uses garlic.js
-	This feature is not quite production ready, since some widgets only update
-	the input field when the form is submitted and so this may not work as 
-	expected. 
-![Garlic Notification](https://raw.github.com/ninapavlich/django-unsaved-changes/master/docs/screenshots/garlic_notification.png)
-
-
-You can use any combination of these three features using the settings below, 
-though at this point I don't recommend using the 
-UNSAVED_CHANGES_PERSISTANT_STORAGE feature on forms that use complex widgets.
-
+5. UNSAVED_CHANGES_AJAX_SAVE :: Automatically save the admin form as the 
+	user makes changes.
 
 ## Compatibility / Requirements
 
-1. Django (Last tested with 1.11.1 and 2.0.2)
+1. Django (Last tested with 2.0.2)
 
-This admin was optimized for django-grappelli but works with the default django admin.
 
 ## Installation
 
@@ -57,7 +48,7 @@ This admin was optimized for django-grappelli but works with the default django 
 	UNSAVED_CHANGES_SUBMITTED_OVERLAY = True
 	UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS = True
 	UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE = True
-	UNSAVED_CHANGES_PERSISTANT_STORAGE = False #not quite production ready
+	UNSAVED_CHANGES_AJAX_SAVE = True
 
 	#Note that all four of these settins are False by default
 
@@ -75,8 +66,8 @@ Either extend the example admin:
 		# UNSAVED_CHANGES_SUMBITTED_ALERT = False
 		# UNSAVED_CHANGES_SUBMITTED_OVERLAY = False
 		# UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS = False
-		UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE = False
-		# UNSAVED_CHANGES_PERSISTANT_STORAGE = False
+		# UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE = False
+		UNSAVED_CHANGES_AJAX_SAVE = False
 
 Or simply add the necessary template and context variables to your existing admin view:
 
@@ -85,7 +76,3 @@ Or simply add the necessary template and context variables to your existing admi
 	class MyCustomAdmin(UnsavedChangesAdminMixin, admin.ModelAdmin):
 
 		pass
-
-## Known Issues
-
-	* Garlic persistant data detection not quite working with Grappelli Horizontal widget, WYSIWYG widgets, File uploads

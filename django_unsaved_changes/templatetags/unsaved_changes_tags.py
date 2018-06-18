@@ -15,6 +15,7 @@ def get_unsaved_changes_settings():
         'use_submitted_overlay': getattr(settings, 'UNSAVED_CHANGES_SUBMITTED_OVERLAY', False),
         'show_unsaved_changes_visuals': getattr(settings, 'UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS', False),
         'keyboard_shortcut_save': getattr(settings, 'UNSAVED_CHANGES_KEYBOARD_SHORTCUT_SAVE', False),
-        'debug': getattr(settings, 'DEBUG', False),
+        'ajax_save': getattr(settings, 'UNSAVED_CHANGES_AJAX_SAVE', False),
+        'debug': getattr(settings, 'UNSAVED_CHANGES_DEBUG', getattr(settings, 'DEBUG', False)),
     }
     return json.dumps(config)

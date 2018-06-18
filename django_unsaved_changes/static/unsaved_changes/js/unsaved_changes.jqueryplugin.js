@@ -24,9 +24,8 @@
             ignore_types: [],
             ignore_keys: ["old"],
             debug: false,
-            initilize_delay: 1000
-            //['.ui-autocomplete-input']
-            //['.ui-autocomplete-input', '.grp-autocomplete-hidden-field',  "[name='csrfmiddlewaretoken']", "[placeholder='Filter']", ".ckeditorwidget"] //"[type='file']",
+            initilize_delay: 1000,
+            autosave_delay: 1000
         };
 
     // The actual plugin constructor
@@ -40,7 +39,15 @@
 
         this.form_was_submitted = false;
         this.form_submitted_time = null;
+        
+        this.form_save_request = true;
+        this.form_saving_ajax = false;
+        this.form_saving_ajax_timeout = null;
 
+        this.error_note_container = $(this.element).find('.unsaved_changes .errornote')[0];
+        this.info_note_container = $(this.element).find('.unsaved_changes .infonote')[0];
+        this.error_node_hide_timeout = null;
+        this.info_node_hide_timeout = null;
 
 
         this.init();
@@ -49,71 +56,89 @@
     UnsavedChanges.prototype = {
 
         init: function() {
-            var parent = this;
+            var self = this;
 
 
-            this.form = $(this.element).find('form')[0];
-            this.all_inputs = this.getAllEligibleInputs();
-            
+            this.form = this.element.tagName.toLowerCase() == 'form'? this.element : $(this.element).find('form')[0];
+            this.all_inputs = this.getAllEligibleInputs();            
       
             
             setTimeout(function(){
-                parent.initAfterDelay();
+                self.initAfterDelay();
             }, this.options.initilize_delay);
             
         },
         initAfterDelay: function(){
             
-            var parent = this;
+            var self = this;
 
             this.initial_data = this.getFormValues(true);
 
             this.messages_container = $(this.element).find(".grp-messagelist")[0];
 
-            
-            if(this.options.show_unsaved_changes_visuals){
+            this.checkFormStatus();
 
-                $(this.all_inputs).each(function(index, item_name) {
-                    var item = parent.getField(item_name);
-                    
-                    var inputs = parent.getFieldInputs(item_name);
-                    var display_field = parent.getFieldDisplay(item);
-
-                    // console.log("found "+inputs.length+" inputs for "+item_name)
-
-                    $(inputs).each(function(index, input) {
-                        
-                        $(input).bind("keyup focus change", function(event){
-
-                            var same = parent.areObjectsEqual(parent.initial_data[item_name], parent.getFieldValue(item_name), parent.options.ignore_keys);
-                            
-                            if(!same){
-                                // console.log(item_name+" change? ("+parent.initial_data[item_name]+") vs ("+parent.getFieldValue(item_name)+")")
-                                $(display_field).addClass(parent.options.has_unsaved_data_class);    
-                            }else{
-                                // console.log("same same "+parent.getFieldValue(item_name))
-                                $(display_field).removeClass(parent.options.has_unsaved_data_class);    
-                            }
-                            
-                            
-                        });
-                    });
-
-                    
-                });
-
+            if(self.options.ajax_save){
+                $(this.form).addClass('ajax_save');    
             }
+            
+
+            $(this.all_inputs).each(function(index, item_name) {
+                var item = self.getField(item_name);
+                
+                var inputs = self.getFieldInputs(item_name);
+                var display_field = self.getFieldDisplay(item);
+
+                // console.log("found "+inputs.length+" inputs for "+item_name)
+
+                $(inputs).each(function(index, input) {
+                    
+
+                    var container_field = self.getFieldContainer(input);
+                    var error_container =$('<ul class="unsaved_changes_item errorlist"></ul>');
+                    $(container_field).prepend(error_container);            
+
+                    $(input).bind("keyup focus change", function(event){
+
+
+                        var same = self.areObjectsEqual(self.initial_data[item_name], self.getFieldValue(item_name), self.options.ignore_keys);
+
+                        
+
+                        if(self.options.show_unsaved_changes_visuals){
+
+                            if(!same){
+                                // console.log(item_name+" change? ("+self.initial_data[item_name]+") vs ("+self.getFieldValue(item_name)+")")
+                                $(display_field).addClass(self.options.has_unsaved_data_class);    
+                            }else{
+                                // console.log("same same "+self.getFieldValue(item_name))
+                                $(display_field).removeClass(self.options.has_unsaved_data_class);    
+                            }
+
+                        }
+                        if(!same && self.options.ajax_save){
+                            self.requestSave()
+                        }
+
+                        self.checkFormStatus();
+                        
+                    });
+                });
+                
+            });
+            
+            
             if(this.options.use_persistant_storage){
                 
                 $(this.element).find('form').garlic();
                 this.garlic_data = this.getFormValues();
 
                 $(this.all_inputs).each(function(index, item_name) {
-                    var item = parent.getField(item_name);
+                    var item = self.getField(item_name);
 
-                    if(item_name && parent.fieldHasPersistantData(item)){
+                    if(item_name && self.fieldHasPersistantData(item)){
 
-                        parent.applyPersistantStyle(item);
+                        self.applyPersistantStyle(item);
                     }
                 });
 
@@ -124,13 +149,6 @@
                     this.addInfoMessage(this.options.persistant_data_detected_message);
                 }
 
-
-                //Init CKEDITOR Plugin:
-                // var parent = this;
-                // setTimeout(function(){
-                //     parent.initCKEditorIntegration();
-                // }, 1000);
-                
 
             }
             if(this.options.use_submitted_overlay){
@@ -173,8 +191,8 @@
         getAllEligibleInputs: function(){
             var raw_inputs = $(this.form).find(":input[name]");
             var output = [];
-            var parent = this;
-            var ignore_types = parent.options.ignore_types;
+            var self = this;
+            var ignore_types = self.options.ignore_types;
             var ignore_types_length = ignore_types.length;
             $(raw_inputs).each(function(index, item) {
                 
@@ -188,12 +206,12 @@
                 if(eligible_type){
                     output.push(item.name); 
                     
-                    // if(parent.options.debug){
+                    // if(self.options.debug){
                     //     console.log("Unsaved Changes :: Adding Input "+item.name) 
                     // }
 
                 }else{
-                    if(parent.options.debug){
+                    if(self.options.debug){
                         console.log("Unsaved Changes :: Input "+item.name+" not eligible") 
                     }
                     
@@ -210,11 +228,11 @@
                 debug = false;
             }
             var output = {};
-            var parent = this;
+            var self = this;
             
             
             $(this.all_inputs).each(function(index, item_name) {
-                output[item_name] = parent.getFieldValue(item_name);
+                output[item_name] = self.getFieldValue(item_name);
                 
             });
 
@@ -246,32 +264,7 @@
             //returns the actual input/inputs that change
             var items = this.getField(item_name, true);
             var item_list = $(items).toArray()
-            var is_ckeditor = $(items).hasClass('ckeditorwidget');
-            var is_horizontal_select_multiple = $(items).attr("multiple") !== undefined && $(items).parents('.grp-related-widget-wrapper').length > 0;
-
-            
-
-            if(is_ckeditor){
-
-                try{
-
-                    var editor_container_id = $(CKEDITOR.instances['id_'+item_name].container).attr("id");
-                    var iframe = $(this.form).find("#"+editor_container_id).find("iframe")[0];
-                    var body = $(iframe.contentWindow.document).find("body")
-                    item_list.push(body);
-                      
-                }catch(e){}
-                
-
-            }else if(is_horizontal_select_multiple){
-                var old_select = this.getField(item_name+"_old")
-                item_list.push(old_select);
-
-                var links = $(items).parents('.grp-related-widget-wrapper').find('a').toArray();
-                item_list = item_list.concat(links);
-            }
-            // console.log("items? "+item_name+" is_ckeditor? "+is_ckeditor+" is_horizontal_select_multiple? "+is_horizontal_select_multiple+" = "+item_list.length+" "+items)
-            return item_list;     
+            return item_list;  
         },
 
 
@@ -291,7 +284,7 @@
                 debug = false;
             }
             var output = {};
-            var parent = this;
+            var self = this;
             
 
             var matching_fields = this.getField(field_name, true);
@@ -316,20 +309,11 @@
                 var value = $(item).val();
                 var is_unchecked_checkbox = String($(item).attr("type")).toLowerCase() == "checkbox" && $(item).is(':checked')==false;
                 var is_select_multiple = $(item).attr("multiple") !== undefined;
-                var is_horizontal_select_multiple = $(item).attr("multiple") !== undefined && $(item).parents('.grp-related-widget-wrapper').length > 0;
-                var is_ckeditor = $(item).hasClass('ckeditorwidget');
-
+                
 
                 if( is_unchecked_checkbox ){
                         
                     value = '';
-
-                }else if(is_horizontal_select_multiple){
-                    value = []; 
-                    //with GRP, it doesn't get selected until unload
-                    $(item).find('option').each(function(i, selected){ 
-                      value[i] = $(selected).val(); 
-                    });
 
                 }else if(is_select_multiple){
 
@@ -339,13 +323,6 @@
                     });
                     
 
-                }else if(is_ckeditor){
-                    
-                    try{
-                        var editor_field = parent.getCKEditorInput(item);
-                        value = editor_field.getData();
-                    }catch(e){}
-                    
                 }
 
                 return value;
@@ -390,15 +367,15 @@
         },
 
         clearAllRestoredData: function(){
-            var parent = this;
+            var self = this;
 
             //Remove all fields that aren't explicitely defined in allow_defaults
             $(this.all_inputs).each(function(index, item_name) {
-                var item = parent.getField(item_name);
-                var display_field = parent.getFieldDisplay(item);
+                var item = self.getField(item_name);
+                var display_field = self.getFieldDisplay(item);
 
-                if($(display_field).hasClass(parent.options.persistant_data_class)){
-                    parent.clearRestoredDataForField(item);    
+                if($(display_field).hasClass(self.options.persistant_data_class)){
+                    self.clearRestoredDataForField(item);    
                 }                
             });
         },
@@ -432,11 +409,7 @@
             return !same
         },
         hasUnsavedChanges: function(){
-            /*
-                KNOWN ISSUES:
-                * Changes in horizontal selector are not detected
-                * Changes in CKEditor are not detected
-            */
+           
             this.current_data = this.getFormValues();
             // window['current_data'] = this.current_data;
             var same = this.areObjectsEqual(this.initial_data, this.current_data, this.options.ignore_keys);
@@ -449,7 +422,7 @@
         },
         addListeners: function() {
             //bind events
-            var parent = this;
+            var self = this;
 
             if(this.options.use_persistant_storage){
 
@@ -459,29 +432,29 @@
 
                 $(window).bind('beforeunload', function(event){
 
-                    if(parent.options.use_unsaved_changes_alert && parent.form_was_submitted != true && parent.hasUnsavedChanges()){
-                        return parent.options.unsaved_changes_alert_message;
+                    if(self.options.use_unsaved_changes_alert && self.form_was_submitted != true && self.hasUnsavedChanges()){
+                        return self.options.unsaved_changes_alert_message;
                     }
 
-                    var dt = (new Date()) - parent.form_submitted_time;
+                    var dt = (new Date()) - self.form_submitted_time;
 
                     
-                    if(parent.options.use_submitted_alert && parent.form_was_submitted == true && dt > parent.options.form_submitted_threshold){
-                        return parent.options.form_submitted_alert_message;
+                    if(self.options.use_submitted_alert && self.form_was_submitted == true && dt > self.options.form_submitted_threshold){
+                        return self.options.form_submitted_alert_message;
                     }
                 });
 
                 $(this.form).bind('submit', function(event){
                     // event.preventDefault();
-                    parent.hasUnsavedChanges();
+                    self.hasUnsavedChanges();
 
-                    parent.form_was_submitted = true;
-                    parent.form_submitted_time = new Date();
+                    self.form_was_submitted = true;
+                    self.form_submitted_time = new Date();
                 });
             }
             if(this.options.use_submitted_overlay){
                 $(this.form).bind('submit', function(event){
-                    $(parent.overlay).fadeIn();
+                    $(self.overlay).fadeIn();
                 });
             }
 
@@ -491,7 +464,7 @@
                 $(document).bind("keydown", function (event) {
                     if (event.ctrlKey) {
                         if(event.originalEvent.code == "KeyS"){
-                            $(parent.form).submit();                            
+                            $(self.form).submit();                            
                         }
                     }
                 });
@@ -500,7 +473,7 @@
           
 
             $( window ).resize(function() {
-                parent.render();
+                self.render();
             });
 
 
@@ -508,15 +481,15 @@
         applyPersistantStyle: function(field){
 
             
-            var parent = this;
+            var self = this;
             var tools = $('<div class="persistant-data-field-tools">\
                 <a href="#" class="clear-persistant-data">Clear restored data for &ldquo;'+this.getPrettyName(field)+'&rdquo;</a></div>');
 
-            var display_field = parent.getFieldDisplay(field);
-            var container_field = parent.getFieldContainer(field);
+            var display_field = self.getFieldDisplay(field);
+            var container_field = self.getFieldContainer(field);
             $(tools).find("a.clear-persistant-data").bind("click", function(event){
                 event.preventDefault();
-                parent.clearRestoredDataForField(field);
+                self.clearRestoredDataForField(field);
             });
 
 
@@ -556,7 +529,7 @@
             this._addMessage(text, "error", false);            
         },
         _addMessage:function(text, cls, autohide){
-            var parent = this;
+            var self = this;
             var message =$('<li class="dynamic grp-'+cls+'"><ul \
                 class="grp-tools"><li><a href="#" class="grp-delete-handler" \
                 title="Hide"></a></li></ul><div class="inner">'+text+'</div></li>');
@@ -569,9 +542,9 @@
 
             $(message).find("a.clear-all-data").bind("click", function(event){
                 event.preventDefault();
-                parent.clearAllRestoredData();
+                self.clearAllRestoredData();
                 $(message).slideUp();
-                parent.addSuccessMessage(parent.options.persistant_data_cleared_message)
+                self.addSuccessMessage(self.options.persistant_data_cleared_message)
             });
 
             
@@ -583,28 +556,168 @@
             }
             
         },
+
+        requestSave: function(){
+            clearTimeout(this.form_saving_ajax_timeout);
+            var self = this;
+            this.form_saving_ajax_timeout = setTimeout(function(){
+                self.ajaxSave();
+            }, this.options.autosave_delay)
+        },
+
+        checkFormStatus:function(){
+            var self = this;
+
+            if( self.hasUnsavedChanges() ){
+                $(this.form).addClass('dirty');
+                this.hideGlobalInfo();
+            }else{
+                $(this.form).removeClass('dirty');
+
+                $(this.all_inputs).each(function(index, item_name) {
+                    var item = self.getField(item_name);
+                    var container_field = self.getFieldContainer(item);
+                    $(container_field).find('.unsaved_changes_item.errorlist').html('');    
+                });
+            }
+        },
+        ajaxSave: function(){
+            var self = this;
+            if(this.form_saving_ajax == true){
+                this.form_save_request = true;
+                return;
+            }
+            console.log("ajaxSave()")
+            this.form_saving_ajax = true;
+            this.form_save_request = false;
+
+            var url = this.form.getAttribute('action');
+            if(url == ""){
+                url = window.location.href;
+            }
+
+            // var formData = new FormData(this.form);
+            // formData.append('unsaved_changes_ajax', true);
+
+            var data = $(this.form).serialize() + "&unsaved_changes_ajax=true"
+            $.ajax({
+                type: this.form.getAttribute('method'),
+                url: url,
+                // data: formData,
+                // processData: false,
+                 data: data,
+                success: function (data) {
+                    console.log('Submission was successful.');
+                    // console.log(data);
+                    self.handleSuccessfulSave()
+                },
+                error: function (data) {
+                    console.log('An error occurred.');
+                    console.log(data);
+                    if(data.status == 400){
+                        self.handleErrorSave(data.responseJSON)
+                    }
+                },
+            });
+        },
+
+        handleSuccessfulSave: function(){
+            var self = this;
+            this.initial_data = this.getFormValues(true);
+            $(this.all_inputs).each(function(index, item_name) {
+                var item = self.getField(item_name);
+                
+                var inputs = self.getFieldInputs(item_name);
+                var display_field = self.getFieldDisplay(item);
+                $(display_field).removeClass(self.options.has_unsaved_data_class);  
+            });
+            this.form_saving_ajax = false;
+
+            this.showGlobalInfo("Form saved successfully at "+ this.getCurrentTime() );
+            
+            this.checkFormStatus();
+
+            if(this.form_save_request===true){
+                this.ajaxSave();
+            }
+    
+        },
+        handleErrorSave: function(error_json){
+            var self = this;
+            this.form_saving_ajax = false;
+            this.hideGlobalInfo();
+
+            if(error_json['non_field_errors'].length > 0){
+                this.showGlobalError(error_json['non_field_errors'][0]);
+            }else{
+                this.showGlobalError("Please correct the error below.");
+            }
+            
+
+            var field_errors = error_json['field_errors']
+            $(this.all_inputs).each(function(index, item_name) {
+                if(item_name in field_errors){
+                    var item = self.getField(item_name);
+                    var container_field = self.getFieldContainer(item);
+
+                    $(container_field).find('.unsaved_changes_item.errorlist').html('<li>'+field_errors[item_name].join('</li><li>')+'</li>');                        
+                }
+            });
+
+            
+
+            this.checkFormStatus();
+
+            if(this.form_save_request===true){
+                this.ajaxSave();
+            }
+        },
+        hideGlobalInfo:function(){
+            $(this.info_note_container).removeClass('show');
+        },
+
+        showGlobalInfo:function (message, hide_delay){
+            clearTimeout(this.info_node_hide_timeout);
+            $(this.info_note_container).text(message);
+            $(this.info_note_container).addClass('show');
+
+            if(hide_delay > 0){
+                var self = this;
+                this.info_node_hide_timeout = setTimeout(function(){
+                    self.hideGlobalInfo();
+                }, hide_delay)
+            }
+        },
+        hideGlobalError:function (message){
+            $(this.error_note_container).removeClass('show');
+        },
+        showGlobalError:function (message){
+
+            $(this.error_note_container).text(message);
+            $(this.error_note_container).addClass('show');
+        },
         
         /* Based on this: http://stackoverflow.com/questions/201183/how-to-determine-equality-for-two-javascript-objects/16788517#16788517*/
         areObjectsEqual: function(x, y, ignore_keys) {
             'use strict';
-            var parent = this;
+            var self = this;
 
             if (x === null || x === undefined || y === null || y === undefined) { 
-                if(parent.options.debug && x !== y){
+                if(self.options.debug && x !== y){
                     console.log("Unsaved Changes :: UNEQUAL undefined "+x+" vs "+y);
                 }
                 return x === y; 
             }
             // after this just checking type of one would be enough
             if (x.constructor !== y.constructor) { 
-                if(parent.options.debug){
+                if(self.options.debug){
                     console.log("Unsaved Changes :: UNEQUAL constructor "+x+" vs "+y);
                 }
                 return false; 
             }
             // if they are functions, they should exactly refer to same one (because of closures)
             if (x instanceof Function) { 
-                if(parent.options.debug && x !== y){
+                if(self.options.debug && x !== y){
                     console.log("Unsaved Changes :: UNEQUAL function "+x+" vs "+y);
                 }
                 return x === y; 
@@ -613,7 +726,7 @@
             if (x instanceof RegExp) { return x === y; }
             if (x === y || x.valueOf() === y.valueOf()) { return true; }
             if (Array.isArray(x) && x.length !== y.length) { 
-                if(parent.options.debug){
+                if(self.options.debug){
                     console.log("Unsaved Changes :: UNEQUAL array "+x+" vs "+y);
                 }
                 return false; 
@@ -621,7 +734,7 @@
 
             // if they are dates, they must had equal valueOf
             if (x instanceof Date) { 
-                if(parent.options.debug){
+                if(self.options.debug){
                     console.log("Unsaved Changes :: UNEQUAL date "+x+" vs "+y);
                 }
                 return false; 
@@ -629,13 +742,13 @@
 
             // if they are strictly equal, they both need to be object at least
             if (!(x instanceof Object)) { 
-                if(parent.options.debug){
+                if(self.options.debug){
                     console.log("Unsaved Changes :: UNEQUAL key "+x+" vs "+y);
                 }
                 return false; 
             }
             if (!(y instanceof Object)) { 
-                if(parent.options.debug){
+                if(self.options.debug){
                     console.log("Unsaved Changes :: UNEQUAL key "+y+" vs "+x);
                 }
                 return false; 
@@ -650,15 +763,15 @@
 
             return Object.keys(y).every(function (i) {                
                 
-                var eligible = parent.isEligibleKey(i, ignore_keys);
-                if(eligible==false && parent.options.debug){
+                var eligible = self.isEligibleKey(i, ignore_keys);
+                if(eligible==false && self.options.debug){
                     console.log("Unsaved Changes :: INELIGIBLE key "+i);
                 }
                 if(eligible==false){return true;}
 
                 var xindex = x_keys.indexOf(i);
                 var same = xindex !== -1;
-                if(same==false && parent.options.debug){
+                if(same==false && self.options.debug){
                     console.log("Unsaved Changes :: UNEQUAL - Y doesn't have key "+i+" "+xindex);
                 }
 
@@ -667,36 +780,36 @@
             }) && Object.keys(x).every(function (i) {                
                 
                 
-                var eligible = parent.isEligibleKey(i, ignore_keys);
-                if(eligible==false && parent.options.debug){
+                var eligible = self.isEligibleKey(i, ignore_keys);
+                if(eligible==false && self.options.debug){
                     console.log("Unsaved Changes :: INELIGIBLE key "+i);
                 }
                 if(eligible==false){return true;}
 
                 var yindex = y_keys.indexOf(i);
                 var same = yindex !== -1;
-                if(same==false && parent.options.debug){
+                if(same==false && self.options.debug){
                     console.log("Unsaved Changes :: UNEQUAL - X doesn't have key "+i+" "+yindex);
                 }
 
                 return same;
 
             }) && x_keys.every(function (i) { 
-                var eligible = parent.isEligibleKey(i, ignore_keys);
-                if(eligible==false && parent.options.debug){
+                var eligible = self.isEligibleKey(i, ignore_keys);
+                if(eligible==false && self.options.debug){
                     console.log("Unsaved Changes :: INELIGIBLE key "+i);
                 }
                 if(eligible==false){return true;}
 
-                return parent.areObjectsEqual(x[i], y[i], ignore_keys); 
+                return self.areObjectsEqual(x[i], y[i], ignore_keys); 
             }) && y_keys.every(function (i) { 
-                var eligible = parent.isEligibleKey(i, ignore_keys);
-                if(eligible==false && parent.options.debug){
+                var eligible = self.isEligibleKey(i, ignore_keys);
+                if(eligible==false && self.options.debug){
                     console.log("Unsaved Changes :: INELIGIBLE key "+i);
                 }
                 if(eligible==false){return true;}
 
-                return parent.areObjectsEqual(x[i], y[i], ignore_keys); 
+                return self.areObjectsEqual(x[i], y[i], ignore_keys); 
             });
             
             
@@ -713,39 +826,13 @@
             }
             return true;
         },
-        initCKEditorIntegration: function(){
 
-            var parent = this;
-            $(this.element).find("textarea").each(function(index, field) {
-                if($(field).hasClass('ckeditorwidget')){
-                    // console.log("init ckeditorwidget integration")
-                    if(parent.options.debug){
-                        console.log("Unsaved Changes :: Init CKEditor Integration for "+field.name);
-                    }
-
-                    var editor_field = parent.getCKEditorInput(field);
-                    
-                    if(editor_field!=null){
-                        $(editor_field.container).bind("keyup focus change", function(event){
-                            $(field).val( $(editor_field).getData() )
-                            $(field).garlic();
-
-                            if(parent.options.debug){
-                                console.log("Unsaved Changes :: Re-Garlic CKEditor Integration for "+field.name);
-                            }
-                        });
-                    }
-                }
-            });
-        },
-        getCKEditorInput: function(field) {
-
-            try{
-                var editor_id = $(field).attr("id");
-                return CKEDITOR.instances[editor_id];
-                      
-            }catch(e){return null;}
+        getCurrentTime: function(){
+            var date = new Date();
+            return date.toTimeString().split(' ')[0];
+            // return date.getHours() + ":" + date.getMinutes()+":"+date.getSeconds();
         }
+        
 
     };
 

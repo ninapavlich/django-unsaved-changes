@@ -1,5 +1,11 @@
+import json
+
 from django.contrib import admin
 from django.conf import settings
+from django.http import HttpResponse
+
+from django.contrib.admin.options import TO_FIELD_VAR
+from django.contrib.admin.utils import unquote
 
 
 class UnsavedChangesAdminMixin(object):
@@ -33,6 +39,12 @@ class UnsavedChangesAdminMixin(object):
             extra_context['UNSAVED_CHANGES_UNSAVED_CHANGES_VISUALS'] = False
 
         try:
+            extra_context['UNSAVED_CHANGES_AJAX_SAVE'] = settings.UNSAVED_CHANGES_AJAX_SAVE if not hasattr(
+                self, "UNSAVED_CHANGES_AJAX_SAVE") else self.UNSAVED_CHANGES_AJAX_SAVE
+        except:
+            extra_context['UNSAVED_CHANGES_AJAX_SAVE'] = False
+
+        try:
             extra_context['UNSAVED_CHANGES_PERSISTANT_STORAGE'] = settings.UNSAVED_CHANGES_PERSISTANT_STORAGE if not hasattr(
                 self, "UNSAVED_CHANGES_PERSISTANT_STORAGE") else self.UNSAVED_CHANGES_PERSISTANT_STORAGE
         except:
@@ -56,6 +68,57 @@ class UnsavedChangesAdminMixin(object):
 
         return super(UnsavedChangesAdminMixin, self).add_view(request, form_url, extra_context)
 
+    def _changeform_view(self, request, object_id, form_url, extra_context):
+
+        unsaved_changes_ajax = request.POST.get('unsaved_changes_ajax', False)
+        if unsaved_changes_ajax:
+
+            print("unsaved_changes_ajax: " + unsaved_changes_ajax)
+
+            to_field = request.POST.get(
+                TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR))
+            if to_field and not self.to_field_allowed(request, to_field):
+                raise DisallowedModelAdminToField(
+                    "The field %s cannot be referenced." % to_field)
+
+            model = self.model
+            opts = model._meta
+
+            if request.method == 'POST':
+
+                obj = self.get_object(request, unquote(object_id), to_field)
+
+                if not self.has_change_permission(request, obj):
+                    print("TODO -- return permission error")
+
+                if obj is None:
+                    print("TODO -- return object is gone error")
+
+                ModelForm = self.get_form(request, obj)
+
+                # Validate Single Form:
+                form = ModelForm(request.POST, request.FILES, instance=obj)
+                if form.is_valid() == False:
+                    data = {
+                        'field_errors': form.errors,
+                        'non_field_errors': form.non_field_errors()
+                    }
+                    response = HttpResponse(json.dumps(
+                        data), content_type='application/json')
+                    response.status_code = 400
+                    return response
+
+                # TODO -- validate inlines
+                # formsets, inline_instances = self._create_formsets(
+                #     request, new_object, change=not add)
+                # if all_valid(formsets) == False:
+
+                #     data = {'non_field_errors': "ERROR IN FORMSET..."}
+                #     response = HttpResponse(json.dumps(
+                #         data), content_type='application/json')
+                #     response.status_code = 400
+
+        return super(UnsavedChangesAdminMixin, self)._changeform_view(request, object_id, form_url, extra_context)
 
 class UnsavedChangesAdmin(UnsavedChangesAdminMixin, admin.ModelAdmin):
 
